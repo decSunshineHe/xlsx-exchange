@@ -1,0 +1,20 @@
+{
+    "name": "xlsx-exchange",
+    "version": "1.0.0",
+    "description": "xlsx data format conversion for xspeedsheet",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "build": "rollup src/index.js -c rollup.config.js"
+    },
+    "keywords": [
+        "xlsx",
+        "xspeedsheet"
+    ],
+    "author": "wenjieh",
+    "license": "MIT",
+    "devDependencies": {
+        "rollup-plugin-terser": "^7.0.2",
+        "xlsx": "^0.16.9"
+    }
+}
