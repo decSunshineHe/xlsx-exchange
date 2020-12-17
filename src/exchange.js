@@ -1,5 +1,5 @@
 import XLSX from 'xlsx'
-export default Exchange = {
+const Exchange = {
     //excel -> data
     stox(wb) {
         var out = [];
@@ -54,3 +54,5 @@ export default Exchange = {
         return out;
     },
 }
+
+export default Exchange
