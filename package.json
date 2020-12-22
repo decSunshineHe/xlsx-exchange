@@ -11,7 +11,8 @@
     },
     "keywords": [
         "xlsx",
-        "xspreadsheet"
+        "xlsx-style",
+        "x-spreadsheet"
     ],
     "author": "wenjieh",
     "license": "MIT",
