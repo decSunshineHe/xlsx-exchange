@@ -1,1 +1,148 @@
-"use strict";function e(e){return e&&"object"==typeof e&&"default"in e?e:{default:e}}var t=e(require("xlsx"));const r={stox(e){var r=[];return e.SheetNames.forEach((function(s){var o={name:s,rows:{},merges:[]},a=e.Sheets[s];if(t.default.utils.sheet_to_json(a,{raw:!1,header:1}).forEach((function(e,t){var r={};e.forEach((function(e,t){r[t]={text:e}})),o.rows[t]={cells:r}})),a["!merges"]){a["!merges"].forEach(((e,r)=>{let s=e.e.r-e.s.r,a=e.e.c-e.s.c;o.rows[e.s.r].cells[e.s.c].merge=[s,a];let l=t.default.utils.encode_cell(e.s),u=t.default.utils.encode_cell(e.e);o.merges.push(l+":"+u)}))}r.push(o)})),r},xtos(e){var r=t.default.utils.book_new();return e.forEach((function(e){for(var s=[[]],o=e.rows,a=0;a<o.len;++a){var l=o[a];l&&(s[a]=[],Object.keys(l.cells).forEach((function(e){var t=+e;isNaN(t)||(s[a][t]=l.cells[e].text)})))}var u=t.default.utils.aoa_to_sheet(s);t.default.utils.book_append_sheet(r,u,e.name)})),r}};module.exports=r;
+'use strict';
+
+var XLSX = require('xlsx');
+
+function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'default' in e ? e : { 'default': e }; }
+
+var XLSX__default = /*#__PURE__*/_interopDefaultLegacy(XLSX);
+
+var Exchange = {
+  //excel -> data
+  stox: function stox(wb) {
+    var out = [];
+    wb.SheetNames.forEach(function (name) {
+      var o = {
+        name: name,
+        rows: {},
+        cols: {},
+        merges: [],
+        styles: []
+      };
+      var ws = wb.Sheets[name];
+      var aoa = XLSX__default['default'].utils.sheet_to_json(ws, {
+        raw: false,
+        header: 1
+      }); //获取cell内容
+
+      var styleIndex = 0;
+      aoa.forEach(function (r, i) {
+        var cells = {};
+        r.forEach(function (c, j) {
+          var cellIndex = XLSX__default['default'].utils.encode_cell({
+            c: j,
+            r: i
+          });
+
+          if (ws[cellIndex]['s']) {
+            var cellstyle = ws[cellIndex]['s'];
+            var oCellstyle = {};
+            cells[j] = {
+              text: c,
+              style: styleIndex
+            }; //填充
+
+            if (cellstyle['fill']) {
+              var bgargb = cellstyle['fill']['fgColor']['rgb'];
+              oCellstyle.bgcolor = '#' + bgargb.slice(2);
+            } //字体
+
+
+            if (cellstyle['font']) {
+              oCellstyle.font = {
+                bold: cellstyle['font']['bold'] || false,
+                size: cellstyle['font']['sz'] || 11
+              };
+
+              if (cellstyle['font']['color']) {
+                var fcargb = cellstyle['font']['color']['rgb'];
+
+                if (fcargb == '000000') {
+                  oCellstyle.color = '#FFFFFF';
+                } else {
+                  oCellstyle.color = '#' + fcargb.slice(2);
+                }
+              }
+            } //边框
+
+
+            if (cellstyle['border']) {
+              oCellstyle.border = {};
+
+              for (var key in cellstyle['border']) {
+                var brargb = cellstyle['border'][key]['color']['rgb'];
+                var obrargb = brargb ? '#' + brargb : "#000000";
+                oCellstyle.border[key] = [cellstyle['border'][key]['style'], obrargb];
+              }
+            } //对齐
+
+
+            if (cellstyle['alignment']) {
+              var align = cellstyle['alignment']['horizontal'];
+              oCellstyle.align = align ? align : 'center';
+              var valign = cellstyle['alignment']['vertical'];
+              oCellstyle.valign = !valign || valign == 'center' ? 'middle' : valign;
+            }
+
+            o.styles[styleIndex] = oCellstyle;
+            styleIndex++;
+          } else {
+            cells[j] = {
+              text: c
+            };
+          }
+        });
+        o.rows[i] = {
+          cells: cells
+        };
+      }); //获取合并单元格
+
+      if (ws["!merges"]) {
+        var merges = ws["!merges"];
+        merges.forEach(function (item) {
+          var rMerge = item.e.r - item.s.r;
+          var cMerge = item.e.c - item.s.c;
+          var range = XLSX__default['default'].utils.encode_range(item);
+          o.rows[item.s.r]["cells"][item.s.c].merge = [rMerge, cMerge];
+          o.merges.push(range);
+        });
+      } //获取列宽度
+
+
+      if (ws["!cols"]) {
+        var cols = ws["!cols"];
+        cols.forEach(function (item, index) {
+          o.cols[index] = {};
+          o.cols[index]["width"] = item.wpx;
+        });
+      }
+
+      out.push(o);
+    });
+    return out;
+  },
+  //data -> excel
+  xtos: function xtos(sdata) {
+    var out = XLSX__default['default'].utils.book_new();
+    sdata.forEach(function (xws) {
+      var aoa = [[]];
+      var rowobj = xws.rows;
+
+      for (var ri = 0; ri < rowobj.len; ++ri) {
+        var row = rowobj[ri];
+        if (!row) continue;
+        aoa[ri] = [];
+        Object.keys(row.cells).forEach(function (k) {
+          var idx = +k;
+          if (isNaN(idx)) return;
+          aoa[ri][idx] = row.cells[k].text;
+        });
+      }
+
+      var ws = XLSX__default['default'].utils.aoa_to_sheet(aoa);
+      XLSX__default['default'].utils.book_append_sheet(out, ws, xws.name);
+    });
+    return out;
+  }
+};
+
+module.exports = Exchange;
