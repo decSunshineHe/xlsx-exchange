@@ -5,7 +5,7 @@ export default {
     output: [{
         name: 'xlsx-exchange',
         file: 'dist/xlsx-exchange.cjs.js',
-        //exports: 'default',
+        exports: 'default',
         format: 'cjs'
     }, {
         name: 'xlsx-exchange',
@@ -20,6 +20,6 @@ export default {
         babel({
             exclude: "node_modules/**"
         }),
-        //terser()
+        terser()
     ]
 };

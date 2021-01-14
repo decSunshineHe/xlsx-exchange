@@ -1,26 +1,32 @@
 import XLSX from 'xlsx'
 const Exchange = {
     //excel -> data
-    stox: function (wb) {
+    stox(wb) {
         var out = [];
         wb.SheetNames.forEach(function (name) {
             var o = { name: name, rows: {}, cols: {}, merges: [], styles: [] };
             var ws = wb.Sheets[name];
             var aoa = XLSX.utils.sheet_to_json(ws, { raw: false, header: 1 });
             //获取cell内容
-            var styleIndex = 0;
+            let styleIndex = 0;
             aoa.forEach(function (r, i) {
                 var cells = {};
                 r.forEach(function (c, j) {
-                    var cellIndex = XLSX.utils.encode_cell({ c: j, r: i });
+                    let cellIndex = XLSX.utils.encode_cell({ c: j, r: i });
+                    cells[j] = { text: c }
+
                     if (ws[cellIndex]['s']) {
-                        var cellstyle = ws[cellIndex]['s'];
-                        var oCellstyle = {};
-                        cells[j] = { text: c, style: styleIndex }
+                        let cellstyle = ws[cellIndex]['s'];
+                        let oCellstyle = {};
+
                         //填充
                         if (cellstyle['fill']) {
                             var bgargb = cellstyle['fill']['fgColor']['rgb'];
-                            oCellstyle.bgcolor = '#' + bgargb.slice(2);
+                            if (bgargb && bgargb.length == 6) {
+                                oCellstyle.bgcolor = '#' + bgargb;
+                            } else if (bgargb && bgargb.length == 8) {
+                                oCellstyle.bgcolor = '#' + bgargb.slice(2);
+                            }
                         }
                         //字体
                         if (cellstyle['font']) {
@@ -30,9 +36,16 @@ const Exchange = {
                             }
                             if (cellstyle['font']['color']) {
                                 var fcargb = cellstyle['font']['color']['rgb'];
-                                if (fcargb == '000000') {
-                                    oCellstyle.color = '#FFFFFF';
-                                } else {
+                                if (fcargb && fcargb.length == 6) {
+                                    if (fcargb == '000000') {
+                                        oCellstyle.color = '#FFFFFF';
+                                    } else if (fcargb == 'FFFFFF') {
+                                        oCellstyle.color = '#000000';
+                                    }
+                                    else {
+                                        oCellstyle.color = '#' + fcargb;
+                                    }
+                                } else if (fcargb && fcargb.length == 8) {
                                     oCellstyle.color = '#' + fcargb.slice(2);
                                 }
                             }
@@ -41,22 +54,26 @@ const Exchange = {
                         if (cellstyle['border']) {
                             oCellstyle.border = {};
                             for (var key in cellstyle['border']) {
-                                var brargb = cellstyle['border'][key]['color']['rgb'];
-                                var obrargb = brargb ? '#' + brargb : "#000000";
-                                oCellstyle.border[key] = [cellstyle['border'][key]['style'], obrargb];
+                                let brargb = cellstyle['border'][key]['color']['rgb'];
+                                if (bgargb && bgargb.length == 6) {
+                                    let obrargb = brargb ? '#' + brargb : "#000000";
+                                    oCellstyle.border[key] = [cellstyle['border'][key]['style'], obrargb];
+                                } else if (bgargb && bgargb.length == 8) {
+                                    let obrargb = brargb ? '#' + brargb.slice(2) : "#000000";
+                                    oCellstyle.border[key] = [cellstyle['border'][key]['style'], obrargb];
+                                }
                             }
                         }
                         //对齐
                         if (cellstyle['alignment']) {
-                            var align = cellstyle['alignment']['horizontal'];
+                            let align = cellstyle['alignment']['horizontal'];
                             oCellstyle.align = align ? align : 'center';
-                            var valign = cellstyle['alignment']['vertical'];
+                            let valign = cellstyle['alignment']['vertical'];
                             oCellstyle.valign = (!valign || valign == 'center') ? 'middle' : valign;
                         }
+                        cells[j].style = styleIndex;
                         o.styles[styleIndex] = oCellstyle;
                         styleIndex++;
-                    } else {
-                        cells[j] = { text: c }
                     }
                 });
 
@@ -64,29 +81,30 @@ const Exchange = {
             });
             //获取合并单元格
             if (ws["!merges"]) {
-                var merges = ws["!merges"];
+                let merges = ws["!merges"];
                 merges.forEach(item => {
-                    var rMerge = item.e.r - item.s.r;
-                    var cMerge = item.e.c - item.s.c;
-                    var range = XLSX.utils.encode_range(item);
+                    let rMerge = item.e.r - item.s.r;
+                    let cMerge = item.e.c - item.s.c;
+                    let range = XLSX.utils.encode_range(item);
                     o.rows[item.s.r]["cells"][item.s.c].merge = [rMerge, cMerge];
                     o.merges.push(range);
                 });
             }
             //获取列宽度
             if (ws["!cols"]) {
-                var cols = ws["!cols"];
+                let cols = ws["!cols"];
                 cols.forEach((item, index) => {
                     o.cols[index] = {};
                     o.cols[index]["width"] = item.wpx;
                 })
             }
+
             out.push(o);
         });
         return out;
     },
     //data -> excel
-    xtos: function (sdata) {
+    xtos(sdata) {
         var out = XLSX.utils.book_new();
         sdata.forEach(function (xws) {
             var aoa = [[]];
@@ -107,4 +125,5 @@ const Exchange = {
         return out;
     },
 }
-export default Exchange
+
+export default Exchange;
