@@ -32,7 +32,7 @@ const Exchange = {
                         if (cellstyle['font']) {
                             oCellstyle.font = {
                                 bold: cellstyle['font']['bold'] || false,
-                                size: cellstyle['font']['sz'] || 11
+                                size: Number(cellstyle['font']['sz'] || 11)
                             }
                             if (cellstyle['font']['color']) {
                                 var fcargb = cellstyle['font']['color']['rgb'];
@@ -54,13 +54,19 @@ const Exchange = {
                         if (cellstyle['border']) {
                             oCellstyle.border = {};
                             for (var key in cellstyle['border']) {
-                                let brargb = cellstyle['border'][key]['color']['rgb'];
-                                if (bgargb && bgargb.length == 6) {
-                                    let obrargb = brargb ? '#' + brargb : "#000000";
-                                    oCellstyle.border[key] = [cellstyle['border'][key]['style'], obrargb];
-                                } else if (bgargb && bgargb.length == 8) {
-                                    let obrargb = brargb ? '#' + brargb.slice(2) : "#000000";
-                                    oCellstyle.border[key] = [cellstyle['border'][key]['style'], obrargb];
+                                if (cellstyle['border'][key]['color']) {
+                                    let borderColor = cellstyle['border'][key]['color'];
+                                    if (borderColor['auto'] && borderColor['auto'] == '1') {
+                                        oCellstyle.border[key] = [cellstyle['border'][key]['style'], "#000000"];
+                                    }
+                                    let brargb = cellstyle['border'][key]['color']['rgb'];
+                                    if (brargb && brargb.length == 6) {
+                                        let obrargb = '#' + brargb;
+                                        oCellstyle.border[key] = [cellstyle['border'][key]['style'], obrargb];
+                                    } else if (brargb && brargb.length == 8) {
+                                        let obrargb = '#' + brargb.slice(2);
+                                        oCellstyle.border[key] = [cellstyle['border'][key]['style'], obrargb];
+                                    }
                                 }
                             }
                         }
@@ -70,13 +76,18 @@ const Exchange = {
                             oCellstyle.align = align ? align : 'center';
                             let valign = cellstyle['alignment']['vertical'];
                             oCellstyle.valign = (!valign || valign == 'center') ? 'middle' : valign;
+
+                            //文本换行
+                            let wrap = cellstyle['alignment']['wrapText'];
+                            if (wrap && wrap == '1') {
+                                oCellstyle.textwrap = true;
+                            }
                         }
                         cells[j].style = styleIndex;
                         o.styles[styleIndex] = oCellstyle;
                         styleIndex++;
                     }
                 });
-
                 o.rows[i] = { cells: cells };
             });
             //获取合并单元格
