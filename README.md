@@ -34,8 +34,9 @@ importFile(inputfile) {
     var reader = new FileReader();
     reader.onload = function (e) {
         var data = e.target.result;
-        var workbook = XStyle.read(data, { type: "binary", cellStyles: true });
-        let out = Exchange.stox(workbook);
+        var wbs = XStyle.read(data, {type: "binary",cellStyles: true});
+        var wb = XLSX.read(data, { type: "binary", cellStyles: true });
+        let out = XExchange.stox(wbs, wb);
     };
     reader.readAsBinaryString(file);
 },

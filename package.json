@@ -1,6 +1,6 @@
 {
     "name": "xlsx-exchange",
-    "version": "1.8.0",
+    "version": "1.8.3",
     "description": "xlsx data format conversion for xspreadsheet",
     "main": "dist/xlsx-exchange.cjs.js",
     "module": "dist/xlsx-exchange.esm.js",

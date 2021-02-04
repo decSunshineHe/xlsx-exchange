@@ -1,11 +1,12 @@
 import XLSX from 'xlsx'
 const Exchange = {
     //excel -> data
-    stox(wb) {
+    stox(wbs, wb) {
         var out = [];
-        wb.SheetNames.forEach(function (name) {
+        wbs.SheetNames.forEach(function (name) {
             var o = { name: name, rows: {}, cols: {}, merges: [], styles: [] };
-            var ws = wb.Sheets[name];
+            var ws = wbs.Sheets[name];
+
             var aoa = XLSX.utils.sheet_to_json(ws, { raw: false, header: 1 });
             //获取cell内容
             let styleIndex = 0;
@@ -106,10 +107,16 @@ const Exchange = {
                 let cols = ws["!cols"];
                 cols.forEach((item, index) => {
                     o.cols[index] = {};
-                    o.cols[index]["width"] = item.wpx;
+                    o.cols[index]["width"] = item.wpx * 111 / 100;
                 })
             }
-
+            //获取行高度
+            if (wb && wb.Sheets[name]) {
+                var wrow = wb.Sheets[name]["!rows"];
+                wrow && wrow.forEach((item, index) => {
+                    o.rows[index]["height"] = item.hpx * 5 / 3;
+                })
+            }
             out.push(o);
         });
         return out;
