@@ -11,6 +11,8 @@ xlsx data format conversion for x-spreadsheet
 * 支持单元格文本对齐方式
 * 支持单元格填充颜色
 * 支持单元格字体大小、颜色
+* 支持获取行高、列宽
+* 支持文本换行
 
 ### 引用
 
@@ -36,6 +38,7 @@ importFile(inputfile) {
         var data = e.target.result;
         var wbs = XStyle.read(data, {type: "binary",cellStyles: true});
         var wb = XLSX.read(data, { type: "binary", cellStyles: true });
+        //stox中第二个参数为非必传
         let out = Exchange.stox(wbs, wb);
     };
     reader.readAsBinaryString(file);
@@ -49,9 +52,11 @@ exportFile(outData){
 ```
 
 ## 其他
-需要注意XLSX和XLSX-style的区别
-使用XLSX社区版时XLSX.read读取不到单元格的字体、边框、对齐方式等
+需要注意XLSX和XLSX的区别  
+使用XLSX社区版时XLSX.read读取不到单元格的字体、边框、对齐方式等  
 使用XLSX-style读取不到行高信息，导出数据不能使用writeFile方式（待验证）
+
+所以`xlsx-exchange`支持同时采用XLSX和XLSX-style
 
 thanks 
 https://github.com/SheetJS/sheetjs
